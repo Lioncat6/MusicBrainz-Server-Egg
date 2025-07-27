@@ -1,0 +1,102 @@
+{
+  "_comment": "MusicBrainz Mirror Server Egg - Fetch scripts inline from GitHub",
+  "meta": {
+    "version": "PTDL_v2",
+    "update_url": null
+  },
+  "name": "MusicBrainz Mirror",
+  "author": "YourName <your.email@example.com>",
+  "description": "MusicBrainz Mirror Server with search and replication - installs and starts via scripts fetched dynamically from GitHub.",
+  "docker_images": {
+    "default": "docker:24.0-dind"
+  },
+  "startup": "bash <(curl -s https://raw.githubusercontent.com/Lioncat6/MusicBrainz-Server-Egg/main/startup.sh)",
+  "config": {
+    "files": "{}",
+    "startup": "bash <(curl -s https://raw.githubusercontent.com/Lioncat6/MusicBrainz-Server-Egg/main/startup.sh)",
+    "stop": "docker compose down",
+    "logs": "docker compose logs"
+  },
+  "scripts": {
+    "installation": {
+      "script": "#!/bin/bash\nset -e\n\n# Install required packages\napk add --no-cache bash curl git docker-compose || apk add --no-cache bash curl git\n\nbash <(curl -s https://raw.githubusercontent.com/Lioncat6/MusicBrainz-Server-Egg/main/install.sh)",
+      "container": "docker:24.0-dind",
+      "entrypoint": "bash"
+    }
+  },
+  "variables": [
+    {
+      "name": "MB_GIT_BRANCH",
+      "description": "MusicBrainz branch to use",
+      "env_variable": "MB_GIT_BRANCH",
+      "default_value": "v-2025-06-23.0",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string"
+    },
+    {
+      "name": "MB_SOLR_VERSION",
+      "description": "Solr version to use",
+      "env_variable": "MB_SOLR_VERSION",
+      "default_value": "4.1.0",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string"
+    },
+    {
+      "name": "POSTGRES_VERSION",
+      "description": "Postgres version to use",
+      "env_variable": "POSTGRES_VERSION",
+      "default_value": "16",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string"
+    },
+    {
+      "name": "BUILD_MATERIALIZED_TABLES",
+      "description": "Build materialized tables during install? (1 = yes, 0 = no)",
+      "env_variable": "BUILD_MATERIALIZED_TABLES",
+      "default_value": "0",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|numeric"
+    },
+    {
+      "name": "METABRAINZ_ACCESS_TOKEN",
+      "description": "MetaBrainz replication access token (set after install)",
+      "env_variable": "METABRAINZ_ACCESS_TOKEN",
+      "default_value": "",
+      "user_viewable": false,
+      "user_editable": true,
+      "rules": "string"
+    }
+  ],
+  "mounts": [
+    {
+      "container_path": "/home/container/musicbrainz-docker/local",
+      "description": "Persistent data storage (database, search indexes, configs)",
+      "read_only": false
+    }
+  ],
+  "ports": [
+    {
+      "container_port": 5000,
+      "host_port": 5000,
+      "protocol": "tcp",
+      "description": "MusicBrainz HTTP web server"
+    },
+    {
+      "container_port": 5432,
+      "host_port": 5432,
+      "protocol": "tcp",
+      "description": "PostgreSQL database (optional exposure)"
+    },
+    {
+      "container_port": 8983,
+      "host_port": 8983,
+      "protocol": "tcp",
+      "description": "Solr search server (optional, secure before exposing)"
+    }
+  ],
+  "file_denylist": []
+}
